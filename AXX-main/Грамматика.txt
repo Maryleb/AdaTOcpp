@@ -1,0 +1,140 @@
+program:
+    | statements EOF
+    | EOF
+
+statements:
+    | statement statements
+    | statement
+
+statement:
+    | root_stmt
+    | nested_stmt
+
+# То, что можно написать только на верхнем уровне программы (не вложенном). Например, объявление функции / процедуры
+root_stmt:
+    | function_declaration SEMICOLON
+    | procedure_declaration SEMICOLON
+
+function_declaration:
+    | FUNCTIONKW ID LPR formal_params RPR RETURNKW ID IS variable_declarations BEGINKW block ENDKW ID
+    | FUNCTIONKW ID LPR RPR RETURNKW ID IS variable_declarations BEGINKW block ENDKW ID
+procedure_declaration:
+    | PROCEDUREKW ID LPR formal_params RPR IS variable_declarations BEGINKW block ENDKW ID
+    | PROCEDUREKW ID LPR RPR IS variable_declarations BEGINKW block ENDKW ID
+
+variable_declarations:
+    | variable_declaration SEMICOLON variable_declarations
+    | variable_declaration SEMICOLON
+
+variable_declaration:
+    | ID COLON ID
+    | ID COLON ARRAYKW LPR NUMBER DOUBLEDOT NUMBER RPR OFKW ID
+
+# a: Integer, b: String
+formal_params:
+    | ID COLON ID SEMICOLON formal_params
+    | ID COLON ID
+
+block:
+    | nested_stmt block
+    | nested_stmt
+
+
+
+# Выражения, которые могут быть вложены (арифметические, логические, if, else, циклы)
+nested_stmt:
+    | compound_stmt SEMICOLON
+    | simple_stmt SEMICOLON
+
+# COMPOUND STATEMENT
+compound_stmt:
+    | if_stmt
+    | for_stmt
+    | while_stmt
+
+if_stmt:
+    | IFKW expression THENKW block elsif_stmt ENDKW IFKW
+    | IFKW expression THENKW block else_block ENDKW IFKW
+    | IFKW expression THENKW block ENDKW IFKW
+elsif_stmt:
+    | ELSIFKW expression THENKW block elsif_stmt
+    | ELSIFKW expression THENKW block else_block
+    | ELSIFKW expression THENKW block
+else_block:
+    | ELSEKW block
+
+while_stmt:
+    | WHILEKW expression LOOPKW block ENDKW LOOPKW
+
+for_stmt:
+    | FORKW ID IN (NUMBER | ID) DOUBLEDOT (NUMBER | ID) LOOPKW block ENDKW LOOPKW
+
+# SIMPLE STATEMENT
+simple_stmt:
+    | assignment
+    | expression
+    | return_stmt
+
+assignment:
+    | ID ASSIGN expression
+
+return_stmt:
+    | RETURNKW expression
+
+expression:
+    | disjunction
+
+disjunction:
+    | conjunction OR disjunction
+    | conjunction
+
+conjunction:
+    | inversion AND conjunction
+    | inversion
+
+inversion:
+    | NOTOP inversion
+    | comparison
+
+comparison:
+    | sum GREATER comparison
+    | sum LESS comparison
+    | sum EQUAL comparison
+    | sum NOTEQ comparison
+    | sum GREQUAL comparison
+    | sum LEQUAL comparison
+    | sum
+
+sum:
+    | term PLUS sum
+    | term MINUS sum
+    | term
+
+term:
+    | factor STAR term
+    | factor DIV term
+    | factor MOD term
+    | factor
+
+factor:
+    | PLUS factor
+    | MINUS factor
+    | primary
+
+primary:
+    | LPR expression RPR
+    | atom
+    | atom func_call
+
+func_call:
+    | LPR actual_params RPR
+    | LPR RPR
+
+atom:
+    | ID
+    | STRING
+    | NUMBER
+
+actual_params:
+    | expression COMMA actual_params
+    | expression
